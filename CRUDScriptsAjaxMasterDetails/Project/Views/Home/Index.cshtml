@@ -1,0 +1,237 @@
+﻿@model IEnumerable<Project.Models.Customer>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br /><br />
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+
+</head>
+<body>
+    <table id="tblCustomers" class="table table-striped table-responsive" cellpadding="0" cellspacing="0">
+        <tr>
+            <th style="width:100px; text-align:center">Customer Id</th>
+            <th style="width:100px; text-align:center">Name</th>
+            <th style="width:100px; text-align:center">Address</th>
+            <th style="width:100px; text-align:center">OrderDate</th>
+            <th style="width:100px; text-align:center">Phone</th>
+            <th style="width:100px"></th>
+        </tr>
+        @foreach (var customer in Model)
+        {
+            <tr>
+                <td class="CustomerId">
+                    <span>@customer.CustomerId</span>
+
+                </td>
+                <td class="Name">
+                    <span>@customer.Name</span>
+                    <input type="text" value="@customer.Name" style="display:none" />
+                </td>
+                <td class="Address">
+                    <span>@customer.Address</span>
+                    <input type="text" value="@customer.Address" style="display:none" />
+                </td>
+                <td class="OrderDate">
+                    <span>@customer.OrderDate</span>
+                    <input type="text" value="@customer.OrderDate" style="display:none" />
+                </td>
+                <td class="Phone">
+                    <span>@customer.Phone</span>
+                    <input type="text" value="@customer.Phone" style="display:none" />
+                </td>
+                <td>
+                    <a class="Edit" href="javascript:;">Edit</a>
+                    <a class="Update" href="javascript:;" style="display:none">Update</a>
+                    <a class="Cancel" href="javascript:;" style="display:none">Cancel</a>
+                    <a class="Delete" href="javascript:;">Delete</a>
+                </td>
+            </tr>
+        }
+    </table>
+    <table cellpadding="0" cellspacing="0" class="table table-striped table-responsive">
+        <tr>
+
+            <td>
+                Name:<input type="text" id="txtName" />
+            </td>
+            <td>
+                Address:<input type="text" id="txtAddress" />
+            </td>
+            <td>
+                OrderDate:<input type="text" id="txtOrderDate" />
+            </td>
+            <td>
+                Phone:<input type="text" id="txtPhone" />
+            </td>
+            <td>
+                <input type="button" id="btnAdd" class="btn btn-primary" value="Add" />
+            </td>
+        </tr>
+    </table>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="http://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#txtOrderDate').datepicker({
+                dateFormat: 'mm-dd-yy'
+            })
+        })
+
+        $(function () {
+            //Remove the dummy row if data present.
+            if ($("#tblCustomers tr").length > 2) {
+                $("#tblCustomers tr:eq(1)").remove();
+            } else {
+                var row = $("#tblCustomers tr:last-child");
+                row.find(".Delete").hide();
+                row.find("span").html('&nbsp;');
+            }
+        });
+
+        function AppendRow(row, customerId, name, address, orderdate, phone) {
+            //Bind CustomerId.
+            $(".CustomerId", row).find("span").html(customerId);
+
+            //Bind Name.
+            $(".Name", row).find("span").html(name);
+            $(".Name", row).find("input").val(name);
+
+            //Bind Country.
+            $(".Address", row).find("span").html(address);
+            $(".Country", row).find("input").val(address);
+
+            //Bind Country.
+            $(".OrderDate", row).find("span").html(orderdate);
+            $(".OrderDate", row).find("input").val(orderdate);
+
+            //Bind Country.
+            $(".Phone", row).find("span").html(phone);
+            $(".Phone", row).find("input").val(phone);
+
+            row.find(".Delete").show();
+            $("#tblCustomers").append(row);
+        };
+
+        //Add event handler.
+        $("body").on("click", "#btnAdd", function () {
+            var txtName = $("#txtName");
+            var txtAddress = $("#txtAddress");
+            var txtOrderDate = $("#txtOrderDate");
+            var txtPhone = $("#txtPhone");
+
+            $.ajax({
+                type: "POST",
+                url: "/Home/InsertCustomer",
+                data: '{name: "' + txtName.val() + '", address: "' + txtAddress.val() + '",orderdate: "' + txtOrderDate.val() + '" ,phone: "' + txtPhone.val() + '"  }',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (r) {
+                    var row = $("#tblCustomers tr:last-child");
+                    if ($("#tblCustomers tr:last-child span").eq(0).html() != "&nbsp;") {
+                        row = row.clone();
+                    }
+                    AppendRow(row, r.CustomerId, r.Name, r.Address, r.OrderDate, r.Phone);
+                }
+            });
+        });
+
+
+        //Edit event handler.
+        $("body").on("click", "#tblCustomers .Edit", function () {
+            var row = $(this).closest("tr");
+            $("td", row).each(function () {
+                if ($(this).find("input").length > 0) {
+                    $(this).find("input").show();
+                    $(this).find("span").hide();
+                }
+            });
+            row.find(".Update").show();
+            row.find(".Cancel").show();
+            row.find(".Delete").hide();
+            $(this).hide();
+        });
+
+        //Update event handler.
+        $("body").on("click", "#tblCustomers .Update", function () {
+            var row = $(this).closest("tr");
+            $("td", row).each(function () {
+                if ($(this).find("input").length > 0) {
+                    var span = $(this).find("span");
+                    var input = $(this).find("input");
+                    span.html(input.val());
+                    span.show();
+                    input.hide();
+                }
+            });
+            row.find(".Edit").show();
+            row.find(".Delete").show();
+            row.find(".Cancel").hide();
+            $(this).hide();
+
+            var customer = {};
+            customer.CustomerId = row.find(".CustomerId").find("span").html();
+            customer.Name = row.find(".Name").find("span").html();
+            customer.Address = row.find(".Address").find("span").html();
+            customer.OrderDate = row.find(".OrderDate").find("span").html();
+            customer.Phone = row.find(".Phone").find("span").html();
+            $.ajax({
+                type: "POST",
+                url: "/Home/UpdateCustomer",
+                data: '{customer:' + JSON.stringify(customer) + '}',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json"
+            });
+        });
+
+        //Cancel event handler.
+        $("body").on("click", "#tblCustomers .Cancel", function () {
+            var row = $(this).closest("tr");
+            $("td", row).each(function () {
+                if ($(this).find("input").length > 0) {
+                    var span = $(this).find("span");
+                    var input = $(this).find("input");
+                    input.val(span.html());
+                    span.show();
+                    input.hide();
+                }
+            });
+            row.find(".Edit").show();
+            row.find(".Delete").show();
+            row.find(".Update").hide();
+            $(this).hide();
+        });
+
+
+        //Delete event handler.
+        $("body").on("click", "#tblCustomers .Delete", function () {
+            if (confirm("Do you want to delete this row?")) {
+                var row = $(this).closest("tr");
+                var customerId = row.find("span").html();
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/DeleteCustomer",
+                    data: '{customerId: ' + customerId + '}',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        if ($("#tblCustomers tr").length > 2) {
+                            row.remove();
+
+                        } else {
+                            row.find(".Delete").hide();
+                            row.find("span").html('&nbsp;');
+                        }
+                    },
+                });
+            }
+        });
+    </script>
+        
+</body>
+</html>
